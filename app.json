@@ -37,6 +37,14 @@
       "bundler": "metro"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#000000",
+          "imageWidth": 200
+        }
+      ],
       "expo-router",
       [
         "expo-notifications",

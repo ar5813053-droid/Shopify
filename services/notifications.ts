@@ -1,21 +1,15 @@
+function makeId() {
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { StorageService, DEFAULT_SOUND_SETTINGS } from './storage';
 import { formatMoney } from '../utils/currency';
 import { CurrencyCode, ScheduledNotificationMeta, SimulatorConfig } from '../types';
-import { v4 as uuidv4 } from 'uuid';
 
-// Configure how notifications are handled when app is foregrounded
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+
+// Notification handler is set during root layout boot (non-blocking).
 
 export async function requestNotificationPermissions(): Promise<boolean> {
   if (!Device.isDevice) {
@@ -149,7 +143,7 @@ export async function startSimulation(
 
   for (let i = 0; i < amounts.length; i++) {
     const amount = amounts[i];
-    const orderId = uuidv4();
+    const orderId = makeId();
 
     const notifId = await scheduleOrderNotification({
       amount,
@@ -161,7 +155,7 @@ export async function startSimulation(
     });
 
     metas.push({
-      id: uuidv4(),
+      id: makeId(),
       notificationId: notifId,
       amount,
       scheduledAt: Date.now() + delay * 1000,
