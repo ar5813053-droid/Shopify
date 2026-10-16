@@ -26,6 +26,9 @@ jobs:
           done
           exit 1
 
+      - name: Align Expo native peers
+        run: npx expo install --fix || true
+
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -67,11 +70,9 @@ jobs:
           APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
           echo "APK=$APK"
           ls -lh "$APK"
-          echo "--- assets in APK ---"
-          unzip -l "$APK" | grep -iE 'index.android.bundle|assets/index' | head -20 || {
-            echo "WARNING: bundle path not found with that name; listing assets:"
-            unzip -l "$APK" | grep -i assets | head -40
-          }
+          unzip -l "$APK" | grep -iE 'index.android.bundle' | head -5
+          # Fail if JS bundle missing
+          unzip -l "$APK" | grep -q 'index.android.bundle'
           cp "$APK" Shopify-Simulator.apk
 
       - name: Upload APK artifact

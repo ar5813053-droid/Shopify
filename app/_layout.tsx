@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
@@ -14,15 +15,13 @@ export default function RootLayout() {
       SplashScreen.hideAsync().catch(() => undefined);
     };
     hide();
-    const a = setTimeout(hide, 200);
-    const b = setTimeout(hide, 800);
-    const c = setTimeout(hide, 2000);
+    const timers = [200, 800, 2000].map((ms) => setTimeout(hide, ms));
 
-    // Notifications never block startup
+    // Notifications off the critical path
     import('expo-notifications')
-      .then((Notifications) => {
+      .then((N) => {
         try {
-          Notifications.setNotificationHandler({
+          N.setNotificationHandler({
             handleNotification: async () => ({
               shouldShowAlert: true,
               shouldPlaySound: true,
@@ -37,33 +36,31 @@ export default function RootLayout() {
       })
       .catch(() => undefined);
 
-    return () => {
-      clearTimeout(a);
-      clearTimeout(b);
-      clearTimeout(c);
-    };
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ErrorBoundary>
-        <StatusBar style={isDark ? 'light' : 'dark'} />
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: colors.card },
-            headerTintColor: colors.text,
-            headerTitleStyle: { fontWeight: '600' },
-            contentStyle: { backgroundColor: colors.background },
-            animation: 'slide_from_right',
-          }}
-        >
-          <Stack.Screen name="index" options={{ title: 'Shopify', headerShown: true }} />
-          <Stack.Screen name="settings" options={{ title: 'Settings' }} />
-          <Stack.Screen name="simulator" options={{ title: 'Sales Simulator' }} />
-          <Stack.Screen name="notification-settings" options={{ title: 'Notification Sound' }} />
-          <Stack.Screen name="order/[id]" options={{ title: 'Order Detail' }} />
-        </Stack>
-      </ErrorBoundary>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ErrorBoundary>
+          <StatusBar style={isDark ? 'light' : 'dark'} />
+          <Stack
+            screenOptions={{
+              headerStyle: { backgroundColor: colors.card },
+              headerTintColor: colors.text,
+              headerTitleStyle: { fontWeight: '600' },
+              contentStyle: { backgroundColor: colors.background },
+              animation: 'fade',
+            }}
+          >
+            <Stack.Screen name="index" options={{ title: 'Shopify', headerShown: true }} />
+            <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+            <Stack.Screen name="simulator" options={{ title: 'Sales Simulator' }} />
+            <Stack.Screen name="notification-settings" options={{ title: 'Notification Sound' }} />
+            <Stack.Screen name="order/[id]" options={{ title: 'Order Detail' }} />
+          </Stack>
+        </ErrorBoundary>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
