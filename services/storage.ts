@@ -121,7 +121,7 @@ export const StorageService = {
   },
 
   async getSalesHistory(): Promise<SalesDataPoint[]> {
-    return getItem(KEYS.SALES_HISTORY, DEFAULT_SALES_HISTORY));
+    return getItem(KEYS.SALES_HISTORY, DEFAULT_SALES_HISTORY);
   },
   async saveSalesHistory(data: SalesDataPoint[]): Promise<void> {
     return setItem(KEYS.SALES_HISTORY, data);
