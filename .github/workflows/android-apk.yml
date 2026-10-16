@@ -51,20 +51,27 @@ jobs:
           EXPO_NO_NEW_ARCH: "1"
         run: npx expo prebuild --platform android --non-interactive --no-install
 
-      - name: Patch Android build (Kotlin / new arch)
+      - name: Patch Android build
         run: python3 scripts/patch-android-build.py
 
-      - name: Build debug APK
+      - name: Build RELEASE APK (embedded JS — no Metro)
         working-directory: android
+        env:
+          NODE_ENV: production
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Verify and package APK
+      - name: Verify bundle inside APK
         run: |
-          APK=$(find android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          APK=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
           echo "APK=$APK"
           ls -lh "$APK"
+          echo "--- assets in APK ---"
+          unzip -l "$APK" | grep -iE 'index.android.bundle|assets/index' | head -20 || {
+            echo "WARNING: bundle path not found with that name; listing assets:"
+            unzip -l "$APK" | grep -i assets | head -40
+          }
           cp "$APK" Shopify-Simulator.apk
 
       - name: Upload APK artifact
