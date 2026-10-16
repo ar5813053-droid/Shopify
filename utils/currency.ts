@@ -3,7 +3,7 @@ import { CURRENCY_SYMBOLS, CURRENCY_MINOR_FACTOR } from '../constants/theme';
 
 export function formatMoney(
   amountMinor: number,
-  currency: CurrencyCode = 'GBP',
+  currency: CurrencyCode = 'INR',
   showSymbol = true
 ): string {
   const factor = CURRENCY_MINOR_FACTOR[currency] || 100;
@@ -17,17 +17,17 @@ export function formatMoney(
   return `${symbol}${formatted}`;
 }
 
-export function toMinor(amountMajor: number, currency: CurrencyCode = 'GBP'): number {
+export function toMinor(amountMajor: number, currency: CurrencyCode = 'INR'): number {
   const factor = CURRENCY_MINOR_FACTOR[currency] || 100;
   return Math.round(amountMajor * factor);
 }
 
-export function toMajor(amountMinor: number, currency: CurrencyCode = 'GBP'): number {
+export function toMajor(amountMinor: number, currency: CurrencyCode = 'INR'): number {
   const factor = CURRENCY_MINOR_FACTOR[currency] || 100;
   return amountMinor / factor;
 }
 
-export function formatCompact(amountMinor: number, currency: CurrencyCode = 'GBP'): string {
+export function formatCompact(amountMinor: number, currency: CurrencyCode = 'INR'): string {
   const major = toMajor(amountMinor, currency);
   if (major >= 1_000_000) {
     return `${CURRENCY_SYMBOLS[currency]}${(major / 1_000_000).toFixed(1)}M`;

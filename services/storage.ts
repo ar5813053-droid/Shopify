@@ -23,7 +23,7 @@ const KEYS = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
-  currency: 'GBP',
+  currency: 'INR',
   dashboardEditable: true,
   notificationPermissionAsked: false,
 };
@@ -53,7 +53,7 @@ export const DEFAULT_SIMULATOR_CONFIG: SimulatorConfig = {
   targetTotal: null,
   firstDelaySeconds: 5,
   intervalSeconds: 10,
-  currency: 'GBP',
+  currency: 'INR',
 };
 
 export const DEFAULT_SOUND_SETTINGS: NotificationSoundSettings = {
@@ -94,7 +94,14 @@ async function setItem<T>(key: string, value: T): Promise<void> {
 
 export const StorageService = {
   async getSettings(): Promise<AppSettings> {
-    return getItem(KEYS.SETTINGS, DEFAULT_SETTINGS);
+    const s = await getItem(KEYS.SETTINGS, DEFAULT_SETTINGS);
+    // Prefer INR for this demo build (replace legacy £ default)
+    if (s.currency === 'GBP') {
+      const next = { ...s, currency: 'INR' as const };
+      await setItem(KEYS.SETTINGS, next);
+      return next;
+    }
+    return s;
   },
   async saveSettings(settings: AppSettings): Promise<void> {
     return setItem(KEYS.SETTINGS, settings);
@@ -128,7 +135,13 @@ export const StorageService = {
   },
 
   async getSimulatorConfig(): Promise<SimulatorConfig> {
-    return getItem(KEYS.SIMULATOR_CONFIG, DEFAULT_SIMULATOR_CONFIG);
+    const c = await getItem(KEYS.SIMULATOR_CONFIG, DEFAULT_SIMULATOR_CONFIG);
+    if (c.currency === 'GBP') {
+      const next = { ...c, currency: 'INR' as const };
+      await setItem(KEYS.SIMULATOR_CONFIG, next);
+      return next;
+    }
+    return c;
   },
   async saveSimulatorConfig(config: SimulatorConfig): Promise<void> {
     return setItem(KEYS.SIMULATOR_CONFIG, config);

@@ -6,7 +6,7 @@ export function useDashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics>(DEFAULT_METRICS);
   const [orders, setOrders] = useState<Order[]>([]);
   const [salesHistory, setSalesHistory] = useState<SalesDataPoint[]>([]);
-  const [currency, setCurrency] = useState<CurrencyCode>('GBP');
+  const [currency, setCurrency] = useState<CurrencyCode>('INR');
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
