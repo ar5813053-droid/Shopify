@@ -12,16 +12,15 @@ import { CurrencyCode, ScheduledNotificationMeta, SimulatorConfig } from '../typ
 // Notification handler is set during root layout boot (non-blocking).
 
 export async function requestNotificationPermissions(): Promise<boolean> {
-  if (!Device.isDevice) {
-    console.warn('Notifications require a physical device');
+  try {
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === 'granted') return true;
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
+  } catch (e) {
+    console.warn('Notification permission error', e);
     return false;
   }
-
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
-
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
 }
 
 export async function getPermissionStatus(): Promise<string> {

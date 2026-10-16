@@ -36,6 +36,16 @@ export const DEFAULT_METRICS: DashboardMetrics = {
   availableBalance: 12500000, // £125,000 demo
 };
 
+
+export const DEFAULT_SALES_HISTORY: SalesDataPoint[] = Array.from({ length: 30 }, (_, i) => {
+  const d = new Date();
+  d.setDate(d.getDate() - (29 - i));
+  return {
+    date: d.toISOString().slice(0, 10),
+    amount: Math.round(800000 + Math.sin(i / 3) * 200000 + i * 15000),
+  };
+});
+
 export const DEFAULT_SIMULATOR_CONFIG: SimulatorConfig = {
   totalNotifications: 5,
   minAmount: 5000, // £50.00
@@ -111,7 +121,7 @@ export const StorageService = {
   },
 
   async getSalesHistory(): Promise<SalesDataPoint[]> {
-    return getItem(KEYS.SALES_HISTORY, generateDefaultSalesHistory());
+    return getItem(KEYS.SALES_HISTORY, DEFAULT_SALES_HISTORY));
   },
   async saveSalesHistory(data: SalesDataPoint[]): Promise<void> {
     return setItem(KEYS.SALES_HISTORY, data);
