@@ -57,6 +57,22 @@ jobs:
       - name: Patch Android build
         run: python3 scripts/patch-android-build.py
 
+      - name: Print autolinking + ensure no RNSVG required
+        run: |
+          echo "==== PackageList / autolinking ===="
+          find android -name "PackageList.java" -o -name "PackageList.kt" | head -5 | while read f; do
+            echo "--- $f ---"
+            cat "$f" || true
+          done
+          echo "==== native modules dirs ===="
+          ls -la android/app/build 2>/dev/null || true
+          # Fail build if JS still references gifted-charts (should be gone)
+          if grep -R "react-native-gifted-charts" app components --include="*.tsx" --include="*.ts" 2>/dev/null; then
+            echo "ERROR: gifted-charts still referenced in source"
+            exit 1
+          fi
+          echo "OK: no gifted-charts in source"
+
       - name: Build RELEASE APK (embedded JS — no Metro)
         working-directory: android
         env:

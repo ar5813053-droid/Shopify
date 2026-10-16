@@ -2,7 +2,6 @@ function makeId() {
   return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { StorageService, DEFAULT_SOUND_SETTINGS } from './storage';
 import { formatMoney } from '../utils/currency';

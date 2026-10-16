@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { SalesDataPoint, ThemeColors, CurrencyCode } from '../types';
+import { formatMoney } from '../utils/currency';
 import { FONT_SIZES, SPACING } from '../constants/theme';
 
 interface Props {
@@ -9,19 +10,34 @@ interface Props {
   currency: CurrencyCode;
 }
 
-/** Safe chart: empty data or chart lib errors must not crash the app. */
-export function SalesChart({ data, colors }: Props) {
-  const chartData = useMemo(() => {
-    if (!data || data.length === 0) return [];
-    return data.map((d, i) => ({
-      value: Math.max(0, (d.amount || 0) / 100),
-      label: i % 5 === 0 && d.date ? String(d.date).slice(5) : '',
+/**
+ * Pure React Native chart (Views only).
+ * Avoids react-native-svg / gifted-charts native libs that were missing
+ * from the release APK and caused UnsatisfiedLinkError on device launch.
+ */
+export function SalesChart({ data, colors, currency }: Props) {
+  const { bars, maxVal, total } = useMemo(() => {
+    if (!data || data.length === 0) {
+      return { bars: [] as { h: number; label: string; amount: number }[], maxVal: 1, total: 0 };
+    }
+    const amounts = data.map((d) => Math.max(0, (d.amount || 0) / 100));
+    const max = Math.max(...amounts, 1);
+    const step = Math.max(1, Math.floor(data.length / 6));
+    const bars = data.map((d, i) => ({
+      h: Math.max(4, ((d.amount || 0) / 100 / max) * 120),
+      label: i % step === 0 && d.date ? String(d.date).slice(5) : '',
+      amount: d.amount || 0,
     }));
+    return {
+      bars,
+      maxVal: max,
+      total: amounts.reduce((a, b) => a + b, 0),
+    };
   }, [data]);
 
   const width = Dimensions.get('window').width - 48;
 
-  if (chartData.length < 2) {
+  if (bars.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.card }]}>
         <Text style={[styles.title, { color: colors.text }]}>Sales (Last 30 days)</Text>
@@ -32,47 +48,37 @@ export function SalesChart({ data, colors }: Props) {
     );
   }
 
-  try {
-    // Lazy require so a native/chart failure doesn't break the whole screen module graph
-    const { LineChart } = require('react-native-gifted-charts');
-    return (
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Sales (Last 30 days)</Text>
-        <LineChart
-          data={chartData}
-          width={width}
-          height={180}
-          color={colors.chartLine}
-          thickness={2.5}
-          startFillColor={colors.chartFill}
-          endFillColor="transparent"
-          startOpacity={0.4}
-          endOpacity={0.05}
-          areaChart
-          hideDataPoints
-          curved
-          yAxisTextStyle={{ color: colors.textSecondary, fontSize: 10 }}
-          xAxisLabelTextStyle={{ color: colors.textSecondary, fontSize: 10 }}
-          yAxisColor={colors.border}
-          xAxisColor={colors.border}
-          rulesColor={colors.border}
-          rulesType="solid"
-          noOfSections={4}
-          spacing={width / Math.max(chartData.length - 1, 1)}
-          initialSpacing={8}
-          endSpacing={8}
-        />
+  return (
+    <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <Text style={[styles.title, { color: colors.text }]}>Sales (Last 30 days)</Text>
+      <Text style={[styles.sub, { color: colors.textSecondary }]}>
+        Total {formatMoney(Math.round(total * 100), currency)}
+      </Text>
+      <View style={[styles.chartRow, { width }]}>
+        {bars.map((b, i) => (
+          <View key={i} style={styles.barCol}>
+            <View
+              style={[
+                styles.bar,
+                {
+                  height: b.h,
+                  backgroundColor: colors.chartLine,
+                  opacity: 0.35 + (b.h / 120) * 0.65,
+                },
+              ]}
+            />
+            {b.label ? (
+              <Text style={[styles.barLabel, { color: colors.textSecondary }]} numberOfLines={1}>
+                {b.label}
+              </Text>
+            ) : (
+              <View style={{ height: 14 }} />
+            )}
+          </View>
+        ))}
       </View>
-    );
-  } catch (e) {
-    console.warn('Chart render failed', e);
-    return (
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Sales (Last 30 days)</Text>
-        <Text style={{ color: colors.textSecondary }}>Chart unavailable</Text>
-      </View>
-    );
-  }
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -84,6 +90,31 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FONT_SIZES.md,
     fontWeight: '700',
+    marginBottom: 4,
+  },
+  sub: {
+    fontSize: FONT_SIZES.sm,
     marginBottom: SPACING.md,
+  },
+  chartRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 150,
+    gap: 2,
+  },
+  barCol: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  bar: {
+    width: '80%',
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+    minHeight: 4,
+  },
+  barLabel: {
+    fontSize: 8,
+    marginTop: 4,
   },
 });
